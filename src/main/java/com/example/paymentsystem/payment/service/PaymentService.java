@@ -2,11 +2,13 @@ package com.example.paymentsystem.payment.service;
 
 import com.example.paymentsystem.payment.dto.PaymentRequest;
 import com.example.paymentsystem.payment.entity.Payment;
+import com.example.paymentsystem.payment.entity.PaymentStatus;
 import com.example.paymentsystem.payment.repository.PaymentRepository;
 import com.example.paymentsystem.payment.util.PaymentClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,6 +31,13 @@ public class PaymentService {
 
     @Transactional
     public Payment savePayment(PaymentRequest request) {
+
+        PaymentStatus portOneStatus = PaymentStatus.from(request.getStatus());
+
+        if (portOneStatus != PaymentStatus.PAID) {
+            throw new IllegalArgumentException("Only payments with status PAID can be saved.");
+        }
+
         Payment payment = Payment.builder()
                 .paymentDate(request.getPaymentDate().atStartOfDay())
                 .order(request.getOrderId())
@@ -43,7 +52,7 @@ public class PaymentService {
                 .partner(request.getPartnerId())
                 .pgProvider(request.getPgProvider())
                 .pgType(request.getPgType())
-                .status(request.getStatus())
+                .status(portOneStatus)
                 .build();
 
         return paymentRepository.save(payment);
@@ -53,9 +62,13 @@ public class PaymentService {
     public void cancelPayment(String uid) {
         Payment payment = paymentRepository.findByImpUid(uid)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found : " + uid));
-        String temp = paymentClient.cancelPayment(uid);
-        System.out.println(temp);
-        payment.cancel();
+        payment.markCancleRequested();
+        try {
+            String temp = paymentClient.cancelPayment(uid);
+            payment.markCancel();
+        } catch (RestClientException e) {
+            payment.markCancelFailed();
+        }
 
     }
 }
