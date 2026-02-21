@@ -1,9 +1,12 @@
 package com.example.paymentsystem.payment.service;
 
+import com.example.paymentsystem.payment.config.RabbitMQConfig;
 import com.example.paymentsystem.payment.entity.PaymentCancelFailureHistory;
+import com.example.paymentsystem.payment.messaging.PaymentCancelRetryMessage;
 import com.example.paymentsystem.payment.repository.PaymentCancelFailureHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +21,13 @@ public class PaymentCancellationFailureHandler {
 
     private final PaymentCancelFailureHistoryRepository paymentCancelFailureHistoryRepository;
     private final SlackWebhookService slackService;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handlePaymentCancelFailure(String impUid, Exception exception) {
-
         savePaymentCancelFailureHistory(impUid, exception);
         notifyToSlack(impUid, exception);
-
-        //TODO: dead letter queue 발행
-        //TODO: 재처리 스케줄러 등록
+        publishToCancelRetryQueue(impUid);
     }
 
     private void savePaymentCancelFailureHistory(String impUid, Exception exception) {
@@ -38,6 +39,19 @@ public class PaymentCancellationFailureHandler {
             paymentCancelFailureHistoryRepository.save(paymentCancelFailureHistory);
         } catch (Exception e) {
             log.error("[결제 취소 실패 이력 저장 실패] impUid = " + impUid, e);
+        }
+    }
+
+    private void publishToCancelRetryQueue(String impUid) {
+        try {
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.PAYMENT_CANCEL_EXCHANGE,
+                    RabbitMQConfig.PAYMENT_CANCEL_ROUTING_KEY,
+                    new PaymentCancelRetryMessage(impUid)
+            );
+            log.info("[결제 취소 재시도 큐 발행] impUid = {}", impUid);
+        } catch (Exception e) {
+            log.error("[결제 취소 재시도 큐 발행 실패] impUid = {}", impUid, e);
         }
     }
 
