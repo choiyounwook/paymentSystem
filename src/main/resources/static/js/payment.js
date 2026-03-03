@@ -18,6 +18,13 @@ function generateMerchantUid() {
   );
 }
 
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast show ' + type;
+  setTimeout(() => { toast.className = 'toast'; }, 3000);
+}
+
 function paymentProcess() {
   if (confirm("구매 하시겠습니까?")) { // 구매 확인 알림창 확인 클릭시
     if (isLogin) { // 회원만 결제 가능
@@ -57,18 +64,17 @@ function paymentProcess() {
           console.log(result)
 
           if (result.success) { // DB 저장 성공시
-            alert('결제 완료!')
-            window.location.reload();
+            showToast('결제가 완료되었습니다.');
+            setTimeout(() => window.location.reload(), 1500);
           } else { // 결제 완료 후 DB 저장 실패시
-            alert(`error:[${rsp.status}]\n결제요청이 승인된 경우 관리자에게 문의바랍니다.`);
-            // DB 저장 실패시 status에 따라 추가적인 작업 가능성
+            showToast(`결제는 승인되었으나 저장에 실패했습니다. 관리자에게 문의해 주세요. (${rsp.status})`, 'error');
           }
         } else if (rsp.success == false) { // 결제 실패시
-          alert(rsp.error_msg)
+          showToast(rsp.error_msg, 'error');
         }
       });
     } else { // 비회원 결제 불가
-      alert('로그인이 필요합니다.')
+      showToast('로그인이 필요합니다.', 'error');
     }
   } else { // 구매 확인 알림창 취소 클릭시 돌아가기
     return false;

@@ -11,6 +11,8 @@ import java.util.Optional;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
+    List<Payment> findAllByOrderByIdDesc();
+
     Optional<Payment> findByImpUid(String impUid);
 
     List<Payment> findByPaymentDateBetween(LocalDateTime startDate, LocalDateTime endDate);

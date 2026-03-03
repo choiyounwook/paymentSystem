@@ -6,6 +6,8 @@ import com.example.paymentsystem.payment.entity.Payment;
 import com.example.paymentsystem.payment.service.PaymentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payment")
@@ -26,7 +29,6 @@ public class PaymentController {
    */
   @PostMapping("portone")
   public ApiResponse<String> savePortone(@RequestBody PaymentRequest request) {
-    System.out.println("start db insert");
     paymentService.savePayment(request);
     return ApiResponse.success("Payment insert processed successfully.");
   }
@@ -42,7 +44,7 @@ public class PaymentController {
   /**
    * 결제 취소
    */
-  @GetMapping("cancel/{uid}")
+  @DeleteMapping("cancel/{uid}")
   public ApiResponse<String> cancelPayment(@PathVariable("uid") String uid) {
     paymentService.cancelPayment(uid);
     return ApiResponse.success("Payment cancel processed successfully.");

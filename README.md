@@ -57,6 +57,7 @@ PAID → CANCEL_REQUESTED → CANCELED
 ### 2. 결제 취소 및 실패 후처리
 
 결제 취소 요청 시 PG사 API를 호출하며, 실패한 경우 아래 흐름으로 후처리합니다.
+(PG API 통신에는 연결 타임아웃 3초, 읽기 타임아웃 5초를 설정해 무한 대기를 방지합니다.)
 
 ```
 PG API 호출 실패 (@Retryable, 2회)
@@ -114,7 +115,7 @@ src/main/java/com/example/paymentsystem/
 |--------|---------------------------------|--------------|
 | POST   | `/api/payment/portone`          | 포트원 결제 결과 저장 |
 | GET    | `/api/payment/list`             | 결제 내역 조회     |
-| GET    | `/api/payment/cancel/{imp_uid}` | 결제 취소 요청     |
+| DELETE | `/api/payment/cancel/{imp_uid}` | 결제 취소 요청     |
 
 ### 화면
 
@@ -129,20 +130,23 @@ src/main/java/com/example/paymentsystem/
 
 **요구사항:** Java 17, MySQL 8.0, RabbitMQ
 
-`application.properties`에 아래 항목을 설정합니다.
+`src/main/resources/application-local.properties` 파일을 생성하고 아래 항목을 설정합니다.
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/payment
-spring.datasource.username=
-spring.datasource.password=
-payment.imp-key=
-payment.imp-secret=
-slack.webhook.url=
-spring.rabbitmq.host=localhost
-spring.rabbitmq.port=5672
-spring.rabbitmq.username=guest
-spring.rabbitmq.password=guest
+DB_URL=jdbc:mysql://localhost:3306/payment
+DB_USERNAME=
+DB_PASSWORD=
+IMP_CODE=
+IMP_KEY=
+IMP_SECRET=
+SLACK_WEBHOOK_URL=
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USERNAME=guest
+RABBITMQ_PASSWORD=guest
 ```
+
+> `application-local.properties`는 `.gitignore`에 포함되어 있습니다.
 
 DB 스키마는 Flyway가 애플리케이션 시작 시 자동으로 생성합니다.
 

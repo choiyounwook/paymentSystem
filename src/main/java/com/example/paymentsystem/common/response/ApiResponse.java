@@ -13,10 +13,15 @@ public class ApiResponse<T> {
 
   public ApiResponse(Boolean success, String error, String errorMessage, T message) {
     this.success = success;
-    this.error = Error.builder()
-        .errorCode(error)
-        .errorMessage(errorMessage)
-        .build();
+    if (error != null && errorMessage != null) {
+      this.error = Error.builder()
+          .errorCode(error)
+          .errorMessage(errorMessage)
+          .build();
+    } else {
+      this.error = null;
+    }
+
     this.message = message;
   }
 

@@ -1,71 +1,371 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Page</title>
-  <!-- DataTables CSS -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-  <!-- jQuery -->
+  <title>결제 내역</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- DataTables JS -->
   <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 40px 32px;
+      color: #111;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-header h2 { font-size: 20px; font-weight: 600; }
+
+    .btn-back {
+      font-size: 13px;
+      color: #555;
+      text-decoration: none;
+      border: 1px solid #ddd;
+      padding: 7px 14px;
+      border-radius: 6px;
+      background: #fff;
+      transition: background-color 0.2s;
+    }
+
+    .btn-back:hover { background-color: #f0f0f0; }
+
+    .table-wrap {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+      padding: 24px;
+      overflow-x: auto;
+    }
+
+    /* DataTables 컨트롤 */
+    .dataTables_wrapper {
+      font-size: 13px;
+      color: #555;
+    }
+
+    .dataTables_wrapper .dataTables_top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .dataTables_length select,
+    .dataTables_filter input {
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      outline: none;
+      color: #333;
+      background: #fff;
+    }
+
+    .dataTables_filter input:focus { border-color: #aaa; }
+
+    .dataTables_filter label,
+    .dataTables_length label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 테이블 */
+    table.dataTable {
+      width: 100% !important;
+      border-collapse: collapse;
+    }
+
+    table.dataTable thead th {
+      font-size: 11px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    table.dataTable thead th.sorting::after,
+    table.dataTable thead th.sorting_asc::after,
+    table.dataTable thead th.sorting_desc::after {
+      content: none;
+    }
+
+    table.dataTable tbody td {
+      font-size: 13px;
+      color: #333;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f7f7f7;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    table.dataTable tbody tr:last-child td { border-bottom: none; }
+
+    table.dataTable tbody tr:hover td { background-color: #fafafa; }
+
+    /* 상태 뱃지 */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-PAID { background-color: #e6f4ea; color: #2d7a3a; }
+    .status-CANCELED { background-color: #f0f0f0; color: #888; }
+    .status-CANCEL_REQUESTED { background-color: #fff4e5; color: #b85c00; }
+    .status-CANCEL_FAILED { background-color: #fde8e8; color: #c0392b; }
+
+    /* 액션 버튼 */
+    .action-cell {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .btn-detail {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-detail:hover { background-color: #f5f5f5; }
+
+    .cancel-btn {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #c0392b;
+      background: #fff;
+      border: 1px solid #f0c0c0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .cancel-btn:hover { background-color: #fde8e8; }
+
+    /* 하단 컨트롤 */
+    .dataTables_wrapper .dataTables_bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .dataTables_info { font-size: 13px; color: #aaa; }
+
+    .dataTables_paginate { display: flex; gap: 4px; }
+
+    .dataTables_paginate .paginate_button {
+      padding: 5px 11px;
+      font-size: 13px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #555 !important;
+      background: #fff;
+      transition: background-color 0.2s;
+    }
+
+    .dataTables_paginate .paginate_button:hover {
+      background-color: #f5f5f5 !important;
+      border-color: #ccc !important;
+      color: #111 !important;
+    }
+
+    .dataTables_paginate .paginate_button.current {
+      background: #111 !important;
+      border-color: #111 !important;
+      color: #fff !important;
+    }
+
+    .dataTables_paginate .paginate_button.disabled {
+      color: #ccc !important;
+      cursor: default;
+    }
+
+    /* 모달 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      padding: 32px;
+      width: 460px;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 { font-size: 16px; font-weight: 600; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #bbb;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover { color: #333; }
+
+    .modal-divider {
+      border: none;
+      border-top: 1px solid #f0f0f0;
+      margin-bottom: 20px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid #f7f7f7;
+      font-size: 13px;
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+
+    .detail-label { color: #999; min-width: 110px; }
+
+    .detail-value {
+      color: #111;
+      font-weight: 500;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    /* 토스트 */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+      z-index: 9999;
+    }
+
+    .toast.show { opacity: 1; }
+    .toast.success { background-color: #111; }
+    .toast.error { background-color: #e53e3e; }
+  </style>
 </head>
 <body>
-<h2>Payment Data</h2>
-<table id="paymentTable" class="display" style="width:100%">
-  <thead>
-  <tr>
-    <th>ID</th>
-    <th>Partner ID</th>
-    <th>User ID</th>
-    <th>Order ID</th>
-    <th>Payment Amount</th>
-    <th>Payment Date</th>
-    <th>impUid</th>
-    <th>Payment Method</th>
-    <th>Merchant UID</th>
-    <th>PG Provider</th>
-    <th>PG Type</th>
-    <th>PG TID</th>
-    <th>Status</th>
-    <th>Card Name</th>
-    <th>Card Number</th>
-    <th>Created At</th>
-    <th>Updated At</th>
-    <th>Actions</th>
-  </tr>
-  </thead>
-  <tbody>
-  </tbody>
-</table>
+
+<div id="toast" class="toast"></div>
+
+<div id="detailModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>결제 상세 정보</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <hr class="modal-divider">
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div class="page-header">
+  <h2>결제 내역</h2>
+  <a href="/payment" class="btn-back">← 결제 페이지로</a>
+</div>
+
+<div class="table-wrap">
+  <table id="paymentTable" class="display" style="width:100%">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>파트너 ID</th>
+      <th>유저 ID</th>
+      <th>주문 ID</th>
+      <th>금액</th>
+      <th>결제일</th>
+      <th>결제 수단</th>
+      <th>상태</th>
+      <th>상세</th>
+      <th>액션</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
 <script>
+  const rowDataMap = {};
+
   $(document).ready(function () {
-    // 데이터 테이블 초기화
     $('#paymentTable').DataTable({
       "paging": true,
       "searching": true,
       "ordering": true,
       "info": true,
+      "dom": '<"dataTables_top"lf>t<"dataTables_bottom"ip>',
       "language": {
         "lengthMenu": "_MENU_ 개씩 보기",
-        "search": "검색:",
+        "search": "",
+        "searchPlaceholder": "검색...",
         "zeroRecords": "검색 결과가 없습니다.",
-        "info": "총 _TOTAL_개 중 _START_ - _END_ 표시",
+        "info": "총 _TOTAL_개 중 _START_ - _END_",
         "infoEmpty": "데이터가 없습니다.",
-        "paginate": {
-          "first": "처음",
-          "last": "마지막",
-          "next": "다음",
-          "previous": "이전"
-        }
+        "paginate": { "first": "«", "last": "»", "next": "›", "previous": "‹" }
       },
       "ajax": {
         "url": "/api/payment/list",
         "type": "GET",
-        "dataSrc": function(json) {
-          return json.message;
-        }
+        "dataSrc": function (json) { return json.message; }
       },
       "columns": [
         {"data": "id"},
@@ -74,49 +374,83 @@
         {"data": "order"},
         {"data": "amount"},
         {"data": "paymentDate"},
-        {"data": "impUid"},
         {"data": "paymentMethod"},
-        {"data": "merchantUid"},
-        {"data": "pgProvider"},
-        {"data": "pgType"},
-        {"data": "pgTid"},
-        {"data": "status"},
-        {"data": "cardName"},
-        {"data": "cardNumber"},
-        {"data": "createdAt"},
-        {"data": "updatedAt"},
         {
-          "data": null, // null로 설정하여 커스텀 데이터를 추가할 수 있도록 함
+          "data": "status",
+          "render": function (data) {
+            return `<span class="status-badge status-${data}">${data}</span>`;
+          }
+        },
+        {
+          "data": null,
+          "orderable": false,
           "render": function (data, type, row) {
-            if (!row.cancelable) {
-              return "";
-            }
-            return `<button class="cancel-btn" data-imp-uid="${row.impUid}">결제 취소</button>`;
+            rowDataMap[row.id] = row;
+            return `<button class="btn-detail" data-id="${row.id}">상세보기</button>`;
+          }
+        },
+        {
+          "data": null,
+          "orderable": false,
+          "render": function (data, type, row) {
+            if (!row.cancelable) return '-';
+            return `<div class="action-cell"><button class="cancel-btn" data-imp-uid="${row.impUid}">취소</button></div>`;
           }
         }
       ]
     });
   });
 
-  // 결제 취소 버튼 클릭 이벤트
+  $(document).on('click', '.btn-detail', function () {
+    const row = rowDataMap[$(this).data('id')];
+    const fields = [
+      {label: 'impUid',       value: row.impUid},
+      {label: 'Merchant UID', value: row.merchantUid},
+      {label: 'PG사',         value: row.pgProvider},
+      {label: 'PG 타입',      value: row.pgType},
+      {label: 'PG TID',       value: row.pgTid},
+      {label: '카드사',        value: row.cardName},
+      {label: '카드 번호',     value: row.cardNumber},
+      {label: '생성일시',      value: row.createdAt},
+      {label: '수정일시',      value: row.updatedAt},
+    ];
+
+    const html = fields.map(f =>
+        `<div class="detail-row">
+          <span class="detail-label">${f.label}</span>
+          <span class="detail-value">${f.value ?? '-'}</span>
+        </div>`
+    ).join('');
+
+    $('#modalContent').html(html);
+    $('#detailModal').addClass('show');
+  });
+
+  $('#modalClose, #detailModal').on('click', function (e) {
+    if (e.target === this) $('#detailModal').removeClass('show');
+  });
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show ' + type;
+    setTimeout(() => { toast.className = 'toast'; }, 3000);
+  }
+
   $(document).on('click', '.cancel-btn', async function () {
     const impUid = $(this).data('imp-uid');
     const response = await fetch(`/api/payment/cancel/${impUid}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'}
     });
 
     if (response.ok) {
-      const result = await response.text();
-      alert(`결제 취소 요청이 성공적으로 처리되었습니다.`);
-      window.location.reload();
+      showToast('결제가 취소되었습니다.');
+      setTimeout(() => window.location.reload(), 1500);
     } else {
-      alert('결제 취소 요청에 실패했습니다.');
+      showToast('결제 취소 요청에 실패했습니다.', 'error');
     }
   });
-
 </script>
 </body>
 </html>

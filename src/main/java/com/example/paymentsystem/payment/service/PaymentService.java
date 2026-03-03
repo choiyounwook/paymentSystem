@@ -10,6 +10,7 @@ import com.example.paymentsystem.payment.util.PaymentClient;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -22,7 +23,7 @@ public class PaymentService {
   private final PaymentClient paymentClient;
 
   public List<Payment> getAllPayments() {
-    return paymentRepository.findAll();
+    return paymentRepository.findAllByOrderByIdDesc();
   }
 
   @Transactional
