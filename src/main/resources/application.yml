@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: paymentsystem
+  config:
+    import: optional:application-local.yml
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 1000
+
+payment:
+  imp-code: ${IMP_CODE}
+  imp-key: ${IMP_KEY}
+  imp-secret: ${IMP_SECRET}
+
+slack:
+  webhook:
+    url: ${SLACK_WEBHOOK_URL}

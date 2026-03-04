@@ -2,25 +2,31 @@ package com.example.paymentsystem.payment.service;
 
 import com.example.paymentsystem.common.exception.ServiceException;
 import com.example.paymentsystem.common.exception.code.PaymentExceptionCode;
+import com.example.paymentsystem.payment.config.RabbitMQConfig;
+import com.example.paymentsystem.payment.dto.PaymentCancelMessage;
 import com.example.paymentsystem.payment.dto.PaymentRequest;
 import com.example.paymentsystem.payment.entity.Payment;
 import com.example.paymentsystem.payment.entity.PaymentStatus;
 import com.example.paymentsystem.payment.repository.PaymentRepository;
-import com.example.paymentsystem.payment.util.PaymentClient;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientException;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
 
   private final PaymentRepository paymentRepository;
-  private final PaymentClient paymentClient;
+  private final RabbitTemplate rabbitTemplate;
+
+  public String getPaymentStatus(String impUid) {
+    return getPaymentByUId(impUid).getStatus().name();
+  }
 
   public List<Payment> getAllPayments() {
     return paymentRepository.findAllByOrderByIdDesc();
@@ -61,19 +67,26 @@ public class PaymentService {
   }
 
   @Transactional
+  public void markPaymentCancelFailed(String impUid) {
+    paymentRepository.findByImpUid(impUid)
+        .ifPresent(Payment::markCancelFailed);
+  }
+
+  @Transactional
   public void cancelPayment(String uid) {
     Payment payment = getPaymentByUId(uid);
 
     if (!payment.isCancelable()) {
       throw new ServiceException(PaymentExceptionCode.CANNOT_CANCEL_PAYMENT);
     }
+
     payment.markCancelRequested();
-    try {
-      paymentClient.cancelPayment(uid);
-      payment.markCancel();
-    } catch (RestClientException e) {
-      payment.markCancelFailed();
-    }
+    rabbitTemplate.convertAndSend(
+        RabbitMQConfig.PAYMENT_CANCEL_EXCHANGE,
+        RabbitMQConfig.PAYMENT_CANCEL_ROUTING_KEY,
+        new PaymentCancelMessage(payment.getImpUid())
+    );
+    log.info("[결제 취소 메시지 전송] impUid = {}", payment.getImpUid());
   }
 
   private Payment getPaymentByUId(String uid) {

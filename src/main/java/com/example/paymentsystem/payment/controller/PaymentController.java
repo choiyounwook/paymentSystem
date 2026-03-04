@@ -42,7 +42,15 @@ public class PaymentController {
   }
 
   /**
-   * 결제 취소
+   * 결제 상태 조회
+   */
+  @GetMapping("{uid}/status")
+  public ApiResponse<String> getPaymentStatus(@PathVariable("uid") String uid) {
+    return ApiResponse.success(paymentService.getPaymentStatus(uid));
+  }
+
+  /**
+   * 결제 취소 MQ 발행
    */
   @DeleteMapping("cancel/{uid}")
   public ApiResponse<String> cancelPayment(@PathVariable("uid") String uid) {
