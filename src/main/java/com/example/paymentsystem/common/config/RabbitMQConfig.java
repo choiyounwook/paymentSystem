@@ -1,4 +1,4 @@
-package com.example.paymentsystem.payment.config;
+package com.example.paymentsystem.common.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
@@ -60,7 +60,8 @@ public class RabbitMQConfig {
 
   @Bean
   public MessageRecoverer messageRecoverer(RabbitTemplate rabbitTemplate) {
-    return new RepublishMessageRecoverer(rabbitTemplate, PAYMENT_CANCEL_DLX, PAYMENT_CANCEL_DLQ_ROUTING_KEY);
+    return new RepublishMessageRecoverer(rabbitTemplate, PAYMENT_CANCEL_DLX,
+        PAYMENT_CANCEL_DLQ_ROUTING_KEY);
   }
 
   @Bean

@@ -1,15 +1,18 @@
 package com.example.paymentsystem.payment.service;
 
+import com.example.paymentsystem.common.config.RabbitMQConfig;
 import com.example.paymentsystem.common.exception.ServiceException;
 import com.example.paymentsystem.common.exception.code.PaymentExceptionCode;
-import com.example.paymentsystem.payment.config.RabbitMQConfig;
 import com.example.paymentsystem.payment.dto.PaymentCancelMessage;
 import com.example.paymentsystem.payment.dto.PaymentRequest;
 import com.example.paymentsystem.payment.entity.Payment;
 import com.example.paymentsystem.payment.entity.PaymentStatus;
 import com.example.paymentsystem.payment.repository.PaymentRepository;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -87,6 +90,31 @@ public class PaymentService {
         new PaymentCancelMessage(payment.getImpUid())
     );
     log.info("[결제 취소 메시지 전송] impUid = {}", payment.getImpUid());
+  }
+
+  @Transactional
+  public void createDummyPayments(int count) {
+    Random random = new Random();
+    List<Payment> payments = IntStream.range(0, count).mapToObj(i -> {
+      String uid = "dummy_" + System.currentTimeMillis() + "_" + i;
+      return Payment.builder()
+          .partner((long) (random.nextInt(30) + 1))
+          .user((long) (random.nextInt(100) + 1))
+          .order((long) (random.nextInt(1000) + 1))
+          .amount(BigDecimal.valueOf((random.nextInt(100) + 1) * 1000))
+          .paymentDate(LocalDateTime.now().minusDays(1))
+          .impUid(uid)
+          .paymentMethod("card")
+          .merchantUid("IMP_" + uid)
+          .pgProvider("kakaopay")
+          .pgType("payment")
+          .pgTid("test_tid_" + uid)
+          .status(PaymentStatus.PAID)
+          .cardName("카카오뱅크")
+          .cardNumber("1234-****-****-5678")
+          .build();
+    }).toList();
+    paymentRepository.saveAll(payments);
   }
 
   private Payment getPaymentByUId(String uid) {

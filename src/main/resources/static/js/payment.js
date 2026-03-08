@@ -1,6 +1,4 @@
-// 구매자 정보 (impcode는 payment.html 인라인 스크립트에서 주입)
-const useremail = "dusdnr2694@naver.com"
-const username = "eva"
+// 구매자 정보 (impcode, useremail, username은 payment.html 인라인 스크립트에서 주입)
 
 // 결제창 함수 넣어주기
 document.getElementById('payment-button').addEventListener("click",
@@ -9,13 +7,9 @@ document.getElementById('payment-button').addEventListener("click",
 var IMP = window.IMP;
 var isLogin = true; // 로그인 체크 고려
 
-// 시간 + 난수
 function generateMerchantUid() {
-  const now = new Date();
-  return (
-      now.toISOString().replace(/[-:TZ.]/g, '') +
-      Math.floor(Math.random() * 1000) // 난수로 중복 방지
-  );
+  const random = Math.floor(Math.random() * 1000000);
+  return 'IMP' + Date.now() + String(random).padStart(6, '0');
 }
 
 function showToast(message, type = 'success') {
@@ -32,7 +26,7 @@ function paymentProcess() {
       IMP.request_pay({
         pg: 'kakaopay.TC0ONETIME', // PG사 코드표에서 선택
         pay_method: 'card', // 결제 방식
-        merchant_uid: "IMP" + generateMerchantUid(), // 결제 고유 번호
+        merchant_uid: generateMerchantUid(), // 결제 고유 번호
         name: '테스트', // 제품명
         amount: 100, // 결제 가격
         buyer_email: `${useremail}`, // 구매자 이메일

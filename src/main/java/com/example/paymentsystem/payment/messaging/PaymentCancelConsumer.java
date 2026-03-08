@@ -1,6 +1,6 @@
 package com.example.paymentsystem.payment.messaging;
 
-import com.example.paymentsystem.payment.config.RabbitMQConfig;
+import com.example.paymentsystem.common.config.RabbitMQConfig;
 import com.example.paymentsystem.payment.dto.PaymentCancelMessage;
 import com.example.paymentsystem.payment.service.PaymentService;
 import com.example.paymentsystem.payment.util.PaymentClient;

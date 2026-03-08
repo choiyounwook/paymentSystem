@@ -3,8 +3,9 @@ CREATE TABLE `settlements`(
     `partner_id` bigint DEFAULT NULL,
     `total_amount` decimal(15,2) NOT NULL,
     `status` varchar(20) DEFAULT NULL,
-    `payment_date` datetime DEFAULT NULL,
+    `settlement_date` datetime DEFAULT NULL,
     `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_partner_settlement_date` (`partner_id`, `settlement_date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb3;

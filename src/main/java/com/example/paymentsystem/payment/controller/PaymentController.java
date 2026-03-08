@@ -58,4 +58,13 @@ public class PaymentController {
     return ApiResponse.success("Payment cancel processed successfully.");
   }
 
+  /**
+   * 테스트용 더미 결제 데이터 생성
+   */
+  @PostMapping("dummy/{count}")
+  public ApiResponse<String> createDummyPayments(@PathVariable("count") int count) {
+    paymentService.createDummyPayments(count);
+    return ApiResponse.success(count + " dummy payments created successfully.");
+  }
+
 }

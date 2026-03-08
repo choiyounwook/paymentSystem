@@ -30,15 +30,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     implementation 'org.flywaydb:flyway-mysql'
     implementation 'org.flywaydb:flyway-core'
-    
+
     implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springframework:spring-aspects'
 
     implementation 'com.slack.api:slack-api-client:1.46.0'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:6.0.2'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.0.2'
 
     runtimeOnly 'com.mysql:mysql-connector-j'
 

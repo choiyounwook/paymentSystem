@@ -26,6 +26,8 @@ payment:
   imp-code: ${IMP_CODE}
   imp-key: ${IMP_KEY}
   imp-secret: ${IMP_SECRET}
+  user-email: ${USER_EMAIL}
+  user-name: ${USER_NAME}
 
 slack:
   webhook:

@@ -24,10 +24,18 @@ public class PaymentViewController {
   @Value("${payment.imp-code}")
   private String impCode;
 
+  @Value("${payment.user-email}")
+  private String userEmail;
+
+  @Value("${payment.user-name}")
+  private String userName;
+
   @GetMapping
   public String payment(Model model) {
     model.addAttribute("impKey", impKey);
     model.addAttribute("impCode", impCode);
+    model.addAttribute("userEmail", userEmail);
+    model.addAttribute("userName", userName);
     return "payment";
   }
 
