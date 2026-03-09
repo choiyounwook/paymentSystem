@@ -115,6 +115,17 @@ DLQ는 자동 재처리 없이 수동 개입 트리거로만 사용합니다.
                             └─ 신규 건만 settlements 테이블에 COMPLETED 상태로 저장
 ```
 
+**정산 서비스 구조**
+
+스케줄러(`SettlementScheduledTasks`)와 비즈니스 로직(`SettlementService`)을 분리하여 SRP를 적용합니다.
+
+| 클래스 | 역할 |
+|--------|------|
+| `SettlementScheduledTasks` | 스케줄 트리거만 담당, `SettlementService`에 위임 |
+| `SettlementService` | 결제 조회 → 파트너사별 집계 → 정산 저장 (`@Transactional`) |
+
+중복 정산 여부 확인은 파트너 수만큼 개별 쿼리를 날리는 대신, 해당 날짜에 이미 정산된 파트너 ID를 한 번에 조회(`IN` 쿼리) 후 메모리에서 필터링합니다.
+
 **ShedLock (분산 환경 중복 실행 방지)**
 
 다중 인스턴스 환경에서 스케줄러가 중복 실행되지 않도록 ShedLock을 적용합니다.
