@@ -14,7 +14,7 @@ public class SettlementScheduledTasks {
 
   private final SettlementService settlementService;
 
-  @Scheduled(cron = "0 * * * * ?")
+  @Scheduled(cron = "0 0 1 * * ?")
   @SchedulerLock(name = "settlement_daily")
   public void dailySettlement() {
     LocalDate yesterday = LocalDate.now().minusDays(1);

@@ -343,14 +343,15 @@
   </table>
 </div>
 
-<script>
+<script th:inline="none">
   const rowDataMap = {};
 
   $(document).ready(function () {
-    $('#paymentTable').DataTable({
+    var table = $('#paymentTable').DataTable({
       "paging": true,
       "searching": true,
       "ordering": true,
+      "order": [[0, "desc"]],
       "info": true,
       "dom": '<"dataTables_top"lf>t<"dataTables_bottom"ip>',
       "language": {

@@ -20,16 +20,17 @@ public class PaymentCancellationFailureHandler {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void handlePaymentCancelFailure(String impUid, String errorMessage) {
-    savePaymentCancelFailureHistory(impUid, errorMessage);
+    String failureReason = buildFailureReason(errorMessage);
+    savePaymentCancelFailureHistory(impUid, failureReason);
     paymentService.markPaymentCancelFailed(impUid);
-    notifyToSlack(impUid, errorMessage);
+    notifyToSlack(impUid, failureReason);
   }
 
-  private void savePaymentCancelFailureHistory(String impUid, String errorMessage) {
+  private void savePaymentCancelFailureHistory(String impUid, String failureReason) {
     try {
       PaymentCancelFailureHistory history = PaymentCancelFailureHistory.builder()
           .impUid(impUid)
-          .reason(buildFailureReason(errorMessage))
+          .reason(failureReason)
           .build();
       paymentCancelFailureHistoryRepository.save(history);
     } catch (Exception e) {
@@ -37,9 +38,9 @@ public class PaymentCancellationFailureHandler {
     }
   }
 
-  private void notifyToSlack(String impUid, String errorMessage) {
+  private void notifyToSlack(String impUid, String failureReason) {
     try {
-      slackService.sendToSlack("[결제 취소 최종 실패] impUid = " + impUid + ", 오류 = " + buildFailureReason(errorMessage));
+      slackService.sendToSlack("[결제 취소 최종 실패] impUid = " + impUid + ", 오류 = " + failureReason);
     } catch (Exception e) {
       log.error("[Slack 전송 실패] impUid = {}", impUid, e);
     }

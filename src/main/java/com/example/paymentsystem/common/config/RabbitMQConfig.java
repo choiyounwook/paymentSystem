@@ -1,10 +1,16 @@
 package com.example.paymentsystem.common.config;
 
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.retry.MessageRecoverer;
 import org.springframework.amqp.rabbit.retry.RepublishMessageRecoverer;
@@ -12,6 +18,9 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 
 @Configuration
 public class RabbitMQConfig {
@@ -56,6 +65,36 @@ public class RabbitMQConfig {
   public Binding paymentCancelDlqBinding() {
     return BindingBuilder.bind(paymentCancelDlq()).to(paymentCancelDlx())
         .with(PAYMENT_CANCEL_DLQ_ROUTING_KEY);
+  }
+
+  @Bean
+  public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+      ConnectionFactory connectionFactory,
+      MessageConverter messageConverter,
+      MessageRecoverer messageRecoverer) {
+
+    Map<Class<? extends Throwable>, Boolean> retryableMap = new HashMap<>();
+    retryableMap.put(AmqpRejectAndDontRequeueException.class, false);
+
+    SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(3, retryableMap, true, true);
+
+    FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+    backOffPolicy.setBackOffPeriod(1000);
+
+    RetryTemplate retryTemplate = new RetryTemplate();
+    retryTemplate.setRetryPolicy(retryPolicy);
+    retryTemplate.setBackOffPolicy(backOffPolicy);
+
+    SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    factory.setConnectionFactory(connectionFactory);
+    factory.setMessageConverter(messageConverter);
+    factory.setDefaultRequeueRejected(false);
+    factory.setAdviceChain(RetryInterceptorBuilder.stateless()
+        .retryOperations(retryTemplate)
+        .recoverer(messageRecoverer)
+        .build());
+
+    return factory;
   }
 
   @Bean

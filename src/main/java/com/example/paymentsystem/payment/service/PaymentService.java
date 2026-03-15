@@ -43,36 +43,19 @@ public class PaymentService {
       throw new ServiceException(PaymentExceptionCode.INVALID_PAYMENT_STATUS);
     }
 
-    Payment payment = Payment.builder()
-        .paymentDate(request.getPaymentDate().atStartOfDay())
-        .order(request.getOrderId())
-        .amount(BigDecimal.valueOf(request.getAmount()))
-        .pgTid(request.getPgTid())
-        .paymentMethod(request.getPaymentMethod())
-        .cardName(request.getCardName())
-        .cardNumber(request.getCardNumber())
-        .user(request.getUserId())
-        .impUid(request.getImpUid())
-        .merchantUid(request.getMerchantUid())
-        .partner(request.getPartnerId())
-        .pgProvider(request.getPgProvider())
-        .pgType(request.getPgType())
-        .status(portOneStatus)
-        .build();
+    Payment payment = getPayment(request, portOneStatus);
 
     return paymentRepository.save(payment);
   }
 
   @Transactional
   public void markPaymentCanceled(String impUid) {
-    paymentRepository.findByImpUid(impUid)
-        .ifPresent(Payment::markCancel);
+    getPaymentByUId(impUid).markCancel();
   }
 
   @Transactional
   public void markPaymentCancelFailed(String impUid) {
-    paymentRepository.findByImpUid(impUid)
-        .ifPresent(Payment::markCancelFailed);
+    getPaymentByUId(impUid).markCancelFailed();
   }
 
   @Transactional
@@ -120,5 +103,24 @@ public class PaymentService {
   private Payment getPaymentByUId(String uid) {
     return paymentRepository.findByImpUid(uid)
         .orElseThrow(() -> new ServiceException(PaymentExceptionCode.NOT_FOUND_PAYMENT));
+  }
+
+  private Payment getPayment(PaymentRequest request, PaymentStatus status) {
+    return Payment.builder()
+        .paymentDate(request.getPaymentDate().atStartOfDay())
+        .order(request.getOrderId())
+        .amount(BigDecimal.valueOf(request.getAmount()))
+        .pgTid(request.getPgTid())
+        .paymentMethod(request.getPaymentMethod())
+        .cardName(request.getCardName())
+        .cardNumber(request.getCardNumber())
+        .user(request.getUserId())
+        .impUid(request.getImpUid())
+        .merchantUid(request.getMerchantUid())
+        .partner(request.getPartnerId())
+        .pgProvider(request.getPgProvider())
+        .pgType(request.getPgType())
+        .status(status)
+        .build();
   }
 }

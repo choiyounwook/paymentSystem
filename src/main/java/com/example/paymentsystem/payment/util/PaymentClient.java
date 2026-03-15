@@ -1,5 +1,6 @@
 package com.example.paymentsystem.payment.util;
 
+import com.example.paymentsystem.payment.dto.PortOneCancelResponse;
 import com.example.paymentsystem.payment.dto.TokenResponse;
 import com.example.paymentsystem.payment.entity.PortOneRequestUrl;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,6 @@ import org.springframework.web.client.RestClientException;
 public class PaymentClient {
 
   private final RestClient restClient;
-  private final boolean failTest = false;
 
   @Value("${payment.imp-key}")
   private String impKey;
@@ -39,11 +39,11 @@ public class PaymentClient {
           .body(TokenResponse.class);
 
     } catch (RuntimeException e) {
-      throw new RuntimeException("Failed to get access token");
+      throw new RuntimeException("Failed to get access token", e);
     }
   }
 
-  public String cancelPayment(String impUid) {
+  public PortOneCancelResponse cancelPayment(String impUid) {
     String accessToken = getAccessToken().getResponse().getAccess_token();
 
     String url = PAYMENT_URL + PortOneRequestUrl.CANCEL_PAYMENT_URL.getUrl();
@@ -53,13 +53,8 @@ public class PaymentClient {
     headers.setContentType(MediaType.APPLICATION_JSON);
     headers.set("Authorization", "Bearer " + accessToken);
 
-    if (failTest) {
-      // 결제 실패 테스트
-      throw new RestClientException("Forced RestClientException for testing");
-    } else {
-      return restClient.post().uri(url).headers(h -> h.addAll(headers)).body(requestBody).retrieve()
-          .body(String.class);
-    }
+    return restClient.post().uri(url).headers(h -> h.addAll(headers)).body(requestBody).retrieve()
+        .body(PortOneCancelResponse.class);
   }
 
   public String createPayment(String paymentRequest, String token) {
@@ -73,7 +68,7 @@ public class PaymentClient {
           .retrieve()
           .body(String.class);
     } catch (RestClientException e) {
-      throw new RuntimeException("Failed to create payment.");
+      throw new RuntimeException("Failed to create payment.", e);
     }
   }
 }
